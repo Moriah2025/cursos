@@ -75,7 +75,7 @@
     </div>
 
     <!-- ====================================================================
-         HOJA DE IMPRESIÓN 1: PLANILLA DE ASISTENCIA FÍSICA (AI-GUARDRAIL PROOF)
+         HOJA DE IMPRESIÓN 1: PLANILLA DE ASISTENCIA FÍSICA
     ========================================================================= -->
     <div class="attendance-print-sheet p-6 text-black font-sans bg-white">
         <div class="text-center space-y-2 border-b-2 border-black pb-4">
@@ -106,7 +106,7 @@
     </div>
 
     <!-- ====================================================================
-         HOJA DE IMPRESIÓN 2: COMPROBANTE INDIVIDUAL DEL ALUMNO (AI-GUARDRAIL PROOF)
+         HOJA DE IMPRESIÓN 2: COMPROBANTE INDIVIDUAL DEL ALUMNO
     ========================================================================= -->
     <div class="receipt-print-sheet p-8 text-black font-sans bg-white">
         <div id="receiptPrintContainer" class="comprobante-card-print space-y-6">
@@ -483,7 +483,7 @@
                 </div>
             </div>
 
-            <!-- SUBSECCIÓN B: DIAPOSITIVAS DE ESTUDIO ANIMADAS (PREMIUM ACADEMIC DECK) -->
+            <!-- SUBSECCIÓN B: DIAPOSITIVAS DE ESTUDIO ANIMADAS -->
             <div id="est-seccion-diapositivas" class="hidden space-y-6">
                 <div class="relative bg-gray-900/40 rounded-2xl border border-gray-850 p-6 min-h-[350px] flex flex-col justify-between overflow-hidden">
                     
@@ -624,9 +624,12 @@
                 <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">KROMA Admin Portal</h1>
                 <p class="text-xs text-gray-500">Aprobación, Planillas y Canal de Mensajería Escolar</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <button onclick="imprimirAsistenciaAdmin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-1.5">
                     <i class="fa-solid fa-print"></i> Planilla Asistencia
+                </button>
+                <button onclick="restablecerBaseDeDatos()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-1.5" title="Limpiar todos los registros antiguos de pruebas">
+                    <i class="fa-solid fa-trash-can"></i> Restablecer BD
                 </button>
                 <button onclick="cerrarSuperAdmin()" class="bg-gray-900 border border-gray-800 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
                     Cerrar Panel
@@ -687,12 +690,12 @@
             </div>
         </div>
 
-        <!-- CHAT HUB DE CARLOS (Módulo de Mensajería Escolar) -->
+        <!-- CHAT HUB DE CARLOS -->
         <div id="adm-sub-chats" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-gray-950/60 border border-gray-900 rounded-2xl p-4 space-y-2 h-[400px] overflow-y-auto">
                 <h4 class="text-xs font-black uppercase text-gray-400 border-b border-gray-900 pb-2">Alumnos</h4>
                 <div id="adminChatStudentList" class="space-y-2">
-                    <!-- Se llena dinámicamente con las conversaciones activas -->
+                    <!-- Se llena dinámicamente -->
                 </div>
             </div>
             <div class="md:col-span-2 bg-gray-950/60 border border-gray-900 rounded-2xl p-4 flex flex-col h-[400px]">
@@ -732,8 +735,8 @@
          JAVASCRIPT DE CONTROL, BASE DE DATOS Y CHAT
     =========================================== -->
     <script>
-        let alumnosDB = JSON.parse(localStorage.getItem('kroma_alumnos_v2')) || [];
-        let chatDB = JSON.parse(localStorage.getItem('kroma_chats_v2')) || [];
+        let alumnosDB = [];
+        let chatDB = [];
         
         let currentSlide = 0;
         let currentAcademicSlide = 0;
@@ -744,36 +747,45 @@
         let alumnoSesionActiva = null;
         let chatActivoMatricula = null; // Matrícula de la conversación activa en el panel de Carlos
 
-        // Población de datos semillas
-        if (alumnosDB.length === 0) {
-            alumnosDB = [
-                {
-                    nombre: "Carlos Igarza",
-                    edad: "22",
-                    whatsapp: "+584221110236",
-                    correo: "igarzacarlos147@gmail.com",
-                    experiencia: "Avanzado",
-                    metodo: "Binance USDT (37$)",
-                    referencia: "091244",
-                    matricula: "KRM-9901",
-                    aprobado: true,
-                    fecha: "16/06/2026"
-                },
-                {
-                    nombre: "María Rodríguez",
-                    edad: "25",
-                    whatsapp: "+584128374829",
-                    correo: "maria.r@gmail.com",
-                    experiencia: "Principiante",
-                    metodo: "Pago Móvil (40$)",
-                    referencia: "837411",
-                    matricula: "KRM-2384",
-                    aprobado: false,
-                    fecha: "16/06/2026"
-                }
-            ];
-            localStorage.setItem('kroma_alumnos_v2', JSON.stringify(alumnosDB));
+        // Función para inicializar/sincronizar bases de datos sin chocar con basura antigua
+        function cargarBaseDeDatos() {
+            alumnosDB = JSON.parse(localStorage.getItem('kroma_alumnos_v2')) || [];
+            chatDB = JSON.parse(localStorage.getItem('kroma_chats_v2')) || [];
+
+            // Si está vacía por ser la primera vez, cargar datos semilla seguros
+            if (alumnosDB.length === 0) {
+                alumnosDB = [
+                    {
+                        nombre: "Carlos Igarza",
+                        edad: "22",
+                        whatsapp: "+584221110236",
+                        correo: "igarzacarlos147@gmail.com",
+                        experiencia: "Avanzado",
+                        metodo: "Binance USDT (37$)",
+                        referencia: "091244",
+                        matricula: "KRM-9901",
+                        aprobado: true,
+                        fecha: "16/06/2026"
+                    },
+                    {
+                        nombre: "María Rodríguez",
+                        edad: "25",
+                        whatsapp: "+584128374829",
+                        correo: "maria.r@gmail.com",
+                        experiencia: "Principiante",
+                        metodo: "Pago Móvil (40$)",
+                        referencia: "837411",
+                        matricula: "KRM-2384",
+                        aprobado: false,
+                        fecha: "16/06/2026"
+                    }
+                ];
+                localStorage.setItem('kroma_alumnos_v2', JSON.stringify(alumnosDB));
+            }
         }
+
+        // Ejecutar carga inicial
+        cargarBaseDeDatos();
 
         // --- SISTEMA DE NAVEGACIÓN PÚBLICA ---
         function cambiarSesion(sesionId) {
@@ -793,6 +805,11 @@
             const activeBtn = document.getElementById(`tab-${sesionId}`);
             if (activeBtn) {
                 activeBtn.className = "session-tab flex-1 py-3 text-center rounded-xl flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer bg-orange-600 text-white font-bold text-xs md:text-sm shadow-lg";
+            }
+
+            // Si es la pestaña comprobante, renderizar de acuerdo al estado
+            if (sesionId === 'comprobante') {
+                renderizarVistaComprobante();
             }
         }
 
@@ -873,28 +890,43 @@
             formAdmin.classList.toggle('hidden');
         }
 
-        // --- REGISTRO DEL ALUMNO ---
+        // --- REGISTRO DEL ALUMNO (VALIDACIÓN EXTREMA) ---
         document.getElementById('registroForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Recargar DB para tener la última versión real
+            alumnosDB = JSON.parse(localStorage.getItem('kroma_alumnos_v2')) || [];
+            
             const formData = new FormData(this);
             const matriculaGenerada = "KRM-" + Math.floor(1000 + Math.random() * 9000);
+            const refIngresada = formData.get('Referencia').trim();
 
             const nuevoAlumno = {
-                nombre: formData.get('Nombre'),
+                nombre: formData.get('Nombre').trim(),
                 edad: formData.get('Edad'),
-                whatsapp: formData.get('WhatsApp'),
+                whatsapp: formData.get('WhatsApp').trim(),
                 correo: formData.get('Correo').toLowerCase().trim(),
                 experiencia: formData.get('Experiencia'),
                 metodo: formData.get('Metodo_Pago'),
-                referencia: formData.get('Referencia').trim(),
+                referencia: refIngresada,
                 matricula: matriculaGenerada,
                 aprobado: false,
                 fecha: new Date().toLocaleDateString('es-ES')
             };
 
-            const duplicado = alumnosDB.find(al => al.referencia === nuevoAlumno.referencia);
-            if (duplicado) {
-                mostrarToast("Este número de referencia ya está registrado.", false);
+            // Validación de duplicidad robusta (ignora mayúsculas, espacios vacíos y registros corruptos)
+            if (refIngresada) {
+                const duplicado = alumnosDB.find(al => 
+                    al.referencia && 
+                    al.referencia.trim().toLowerCase() === refIngresada.toLowerCase()
+                );
+                
+                if (duplicado) {
+                    mostrarToast(`La referencia #${refIngresada} ya está registrada en el sistema.`, false);
+                    return;
+                }
+            } else {
+                mostrarToast("La referencia de pago no puede estar vacía.", false);
                 return;
             }
 
@@ -916,37 +948,40 @@
             entrarAlWorkspaceEstudiante();
         });
 
-        // --- CONTROL DE ACCESO AL PORTAL DE ALUMNO ---
+        // --- CONTROL DE ACCESO AL PORTAL DE ALUMNO (VALIDACIÓN EXTREMA) ---
         function buscarComprobanteAlumno() {
-            const correo = document.getElementById('loginCorreo').value.toLowerCase().trim();
-            const referencia = document.getElementById('loginRef').value.trim();
+            const correoInput = document.getElementById('loginCorreo').value.toLowerCase().trim();
+            const referenciaInput = document.getElementById('loginRef').value.trim();
 
-            if (!correo || !referencia) {
+            if (!correoInput || !referenciaInput) {
                 mostrarToast("Por favor ingresa ambos campos.", false);
                 return;
             }
 
+            // Recargar DB para buscar con la versión más reciente
             alumnosDB = JSON.parse(localStorage.getItem('kroma_alumnos_v2')) || [];
-            const alumno = alumnosDB.find(al => al.correo === correo && al.referencia === referencia);
+            
+            const alumno = alumnosDB.find(al => 
+                al.correo && al.correo.trim().toLowerCase() === correoInput &&
+                al.referencia && al.referencia.trim().toLowerCase() === referenciaInput.toLowerCase()
+            );
 
             if (alumno) {
                 alumnoSesionActiva = alumno;
                 mostrarToast(`¡Bienvenido de vuelta, ${alumno.nombre.split(" ")[0]}!`);
                 entrarAlWorkspaceEstudiante();
             } else {
-                mostrarToast("No encontramos registros con esos datos.", false);
+                mostrarToast("No encontramos registros con esos datos. Verifica tu correo o referencia.", false);
             }
         }
 
         function entrarAlWorkspaceEstudiante() {
-            // Ocultar landing pública, desplegar workspace privado
             document.getElementById('content-main-app').classList.add('hidden');
             document.getElementById('vista-estudiante').classList.remove('hidden');
 
             document.getElementById('lblEstudianteNombre').textContent = alumnoSesionActiva.nombre;
             document.getElementById('lblEstudianteMatricula').textContent = `Matrícula oficial: ${alumnoSesionActiva.matricula}`;
             
-            // Por defecto abrir pestaña de Comprobante
             cambiarSeccionEstudiante('pase');
         }
 
@@ -990,7 +1025,7 @@
             paseBloqueado.classList.add('hidden');
             paseAprobado.classList.add('hidden');
 
-            // Refrescar datos de la base de datos local por si hubo aprobación
+            // Refrescar datos de la base de datos local
             alumnosDB = JSON.parse(localStorage.getItem('kroma_alumnos_v2')) || [];
             const actual = alumnosDB.find(a => a.matricula === alumnoSesionActiva.matricula);
 
@@ -1018,7 +1053,17 @@
             }
         }
 
-        // --- SISTEMA DE CLASES INTERACTIVAS (AULA VIRTUAL) ---
+        function renderizarVistaComprobante() {
+            // Esta función prepara la vista si el alumno no ha accedido
+            const compLoginForm = document.getElementById('comp-login-form');
+            if (!alumnoSesionActiva) {
+                compLoginForm.classList.remove('hidden');
+            } else {
+                entrarAlWorkspaceEstudiante();
+            }
+        }
+
+        // --- SISTEMA DE CLASES INTERACTIVAS ---
         function toggleClase(numero) {
             const content = document.getElementById(`clase-content-${numero}`);
             const icon = document.getElementById(`clase-icon-${numero}`);
@@ -1061,7 +1106,6 @@
                 feed.appendChild(container);
             });
 
-            // Auto-scroll al final del chat
             feed.scrollTop = feed.scrollHeight;
         }
 
@@ -1104,6 +1148,19 @@
         function cerrarSuperAdmin() {
             document.getElementById('content-main-app').classList.remove('hidden');
             document.getElementById('vista-super-admin').classList.add('hidden');
+        }
+
+        // RESTABLECER LA BASE DE DATOS (Módulo de limpieza de caché vieja de testeo)
+        function restablecerBaseDeDatos() {
+            if (confirm("Carlos, ¿estás seguro de que deseas restablecer por completo la base de datos?\n\nEsto borrará todas las inscripciones y chats antiguos, dejándote únicamente con el sistema limpio para registrar nuevas referencias sin bloqueos.")) {
+                localStorage.removeItem('kroma_alumnos_v2');
+                localStorage.removeItem('kroma_chats_v2');
+                alumnosDB = [];
+                chatDB = [];
+                cargarBaseDeDatos();
+                mostrarToast("¡Base de datos restablecida correctamente!", true);
+                renderizarDashboardAdmin();
+            }
         }
 
         function cambiarSubseccionAdmin(seccion) {
