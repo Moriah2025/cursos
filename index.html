@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Taller Intensivo KROMA: Diseño Gráfico Textil</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #050505 !important; }
+        .slide-item { will-change: transform, opacity; }
+        /* Transiciones suaves entre sesiones */
+        .session-tab {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Reglas CSS inteligentes para impresión selectiva del comprobante */
+        @media print {
+            body { background-color: #ffffff !important; color: #000000 !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            /* Estilizar el comprobante en papel para que luzca impecable */
+            .comprobante-card {
+                border: 2px solid #000000 !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                padding: 24px !important;
+                border-radius: 8px !important;
+                box-shadow: none !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-200 font-sans min-h-screen antialiased selection:bg-orange-600 selection:text-white pb-20 md:pb-6">
+
+    <!-- Notificación Toast Premium -->
+    <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 bg-gray-950 border border-gray-800 text-white px-5 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-2 no-print">
+        <span id="toastIcon" class="text-lg"></span>
+        <span id="toastMessage" class="text-xs font-bold leading-tight"></span>
+    </div>
+
+    <!-- ==========================================
+         HOJA DE IMPRESIÓN EXCLUSIVA: ASISTENCIA
+    =========================================== -->
+    <div class="hidden attendance-print-sheet p-6 text-black font-sans">
+        <div class="text-center space-y-2 border-b-2 border-black pb-4">
+            <h1 class="text-2xl font-black uppercase tracking-wider">Planilla de Asistencia - Taller KROMA</h1>
+            <p class="text-xs font-bold uppercase">Taller Intensivo: Diseño Gráfico Textil Profesional</p>
+            <p class="text-[10px] text-gray-600">Facilitador: Carlos Igarza • Fecha del Evento: ______/______/2026</p>
+        </div>
+        
+        <table class="w-full mt-6 border-collapse text-xs">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-black p-2 text-center w-8">N°</th>
+                    <th class="border border-black p-2 text-left w-20">Matrícula</th>
+                    <th class="border border-black p-2 text-left">Nombre Completo</th>
+                    <th class="border border-black p-2 text-center w-12">Edad</th>
+                    <th class="border border-black p-2 text-left w-28">WhatsApp</th>
+                    <th class="border border-black p-2 text-left w-24">Referencia</th>
+                    <th class="border border-black p-2 text-center w-12">Firma / Asistencia</th>
+                </tr>
+            </thead>
+            <tbody id="printAttendanceRows">
+                <!-- Se llena dinámicamente mediante JS -->
+            </tbody>
+        </table>
+        
+        <div class="mt-12 flex justify-between text-[10px] text-gray-500 font-mono">
+            <p>Impreso desde el Panel Administrativo KROMA</p>
+            <p>Página 1 de 1</p>
+        </div>
+    </div>
+
+    <div class="max-w-md md:max-w-3xl mx-auto px-4 py-4 md:py-8 space-y-6">
+
+        <header class="text-center space-y-2 no-print">
+            <div class="inline-flex items-center gap-1.5 bg-orange-600/10 text-[#E04A15] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#E04A15]/20">
+                <span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
+                15 📍 Taller Presencial KROMA
+            </div>
+            <h1 class="text-xl sm:text-2xl md:text-4xl font-black text-white tracking-tight">
+                Diseño Gráfico <span class="text-[#E04A15]">Textil Profesional</span>
+            </h1>
+        </header>
+
+        <!-- Barra de navegación reconfigurada -->
+        <nav class="bg-gray-950/80 backdrop-blur-md rounded-2xl p-1.5 border border-gray-900/60 flex justify-between gap-1 no-print sticky top-2 z-50">
+            <button onclick="cambiarSesion('temario')" id="tab-temario" class="session-tab flex-1 py-3 text-center rounded-xl flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer bg-orange-600 text-white font-bold text-xs md:text-sm shadow-lg">
+                <i class="fa-solid fa-graduation-cap text-sm"></i>
+                <span>Temario</span>
+            </button>
+            <button onclick="cambiarSesion('registro')" id="tab-registro" class="session-tab flex-1 py-3 text-center rounded-xl flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-900/60 font-medium text-xs md:text-sm">
+                <i class="fa-solid fa-wallet text-sm"></i>
+                <span>Inscripción</span>
+            </button>
+            <button onclick="cambiarSesion('comprobante')" id="tab-comprobante" class="session-tab flex-1 py-3 text-center rounded-xl flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-900/60 font-medium text-xs md:text-sm relative">
+                <i class="fa-solid fa-receipt text-sm"></i>
+                <span>Comprobante</span>
+                <span id="badgeAprobado" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border border-black hidden animate-ping"></span>
+            </button>
+        </nav>
+
+        <!-- Contenedor Central Dinámico -->
+        <main class="relative bg-gray-950/20 rounded-2xl border border-gray-900/50 shadow-2xl overflow-hidden min-h-[420px]">
+
+            <!-- SESIÓN 1: TEMARIO -->
+            <div id="sesion-temario" class="p-4 sm:p-6 md:p-8 space-y-6">
+                <div class="relative bg-gray-900/30 rounded-2xl p-4 md:p-6 border border-gray-900/60 space-y-4 overflow-hidden min-h-[300px] flex items-center">
+                    
+                    <!-- Diapositiva 1 -->
+                    <div class="slide-item w-full opacity-100 transition-all duration-500 transform translate-x-0 absolute inset-0 p-6 flex flex-col justify-between rounded-2xl overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&q=80&w=800" alt="Perfiles de Color" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none z-0">
+                        <div class="space-y-2 relative z-10">
+                            <span class="inline-block bg-orange-500/10 text-orange-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-orange-500/20">Beneficio Clave</span>
+                            <h3 class="text-base sm:text-xl font-black text-white leading-tight">Cero Desperdicio de Material en el Taller</h3>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Aprenderás a dominar los perfiles de color (CMYK vs. RGB) de forma definitiva. Configura tus diseños para que el tono que ves en el monitor sea el mismo que se estampe en la tela, evitando mermas costosas.</p>
+                        </div>
+                        <div class="bg-gray-950/60 p-3 rounded-lg border border-gray-800 flex items-center gap-3 relative z-10">
+                            <i class="fa-solid fa-palette text-xl text-[#E04A15]"></i>
+                            <p class="text-[10px] text-gray-400">Manejo correcto de perfiles sin variaciones drásticas.</p>
+                        </div>
+                    </div>
+
+                    <!-- Diapositiva 2 -->
+                    <div class="slide-item w-full opacity-0 transition-all duration-500 transform translate-x-8 absolute inset-0 p-6 pointer-events-none flex flex-col justify-between rounded-2xl overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" alt="Rescate con IA" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none z-0">
+                        <div class="space-y-2 relative z-10">
+                            <span class="inline-block bg-orange-500/10 text-orange-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-orange-500/20">Día 1 - Mañana</span>
+                            <h3 class="text-base sm:text-xl font-black text-white leading-tight">El Superpoder de la IA: Rescate de Archivos</h3>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Olvídate de rechazar clientes con logos pixelados traídos por WhatsApp. Utilizaremos Inteligencia Artificial para transformar imágenes de baja resolución en archivos nítidos listos para estampar.</p>
+                        </div>
+                        <div class="bg-gray-950/60 p-3 rounded-lg border border-gray-800 flex items-center gap-3 relative z-10">
+                            <i class="fa-solid fa-wand-magic-sparkles text-xl text-[#E04A15]"></i>
+                            <p class="text-[10px] text-gray-400">Aislamiento de fondos complejos and resolución generativa.</p>
+                        </div>
+                    </div>
+
+                    <!-- Diapositiva 3 -->
+                    <div class="slide-item w-full opacity-0 transition-all duration-500 transform translate-x-8 absolute inset-0 p-6 pointer-events-none flex flex-col justify-between rounded-2xl overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&q=80&w=800" alt="DTF Film" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none z-0">
+                        <div class="space-y-2 relative z-10">
+                            <span class="inline-block bg-orange-500/10 text-orange-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-orange-500/20">Día 1 - Tarde</span>
+                            <h3 class="text-base sm:text-xl font-black text-white leading-tight">Flujo Técnico Perfecto para DTF</h3>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Preparación avanzada de archivos para DTF. Domina la correcta creación del canal de fondo blanco (White Mask), transparencias complejas y armado de un metro lineal óptimo.</p>
+                        </div>
+                        <div class="bg-gray-950/60 p-3 rounded-lg border border-gray-800 flex items-center gap-3 relative z-10">
+                            <i class="fa-solid fa-scissors text-xl text-[#E04A15]"></i>
+                            <p class="text-[10px] text-gray-400">Eliminación de bordes sucios y control de opacidades erróneas.</p>
+                        </div>
+                    </div>
+
+                    <!-- Diapositiva 4 -->
+                    <div class="slide-item w-full opacity-0 transition-all duration-500 transform translate-x-8 absolute inset-0 p-6 pointer-events-none flex flex-col justify-between rounded-2xl overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80&w=800" alt="Sublimación" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none z-0">
+                        <div class="space-y-2 relative z-10">
+                            <span class="inline-block bg-orange-500/10 text-orange-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-orange-500/20">Día 2 - Mañana</span>
+                            <h3 class="text-base sm:text-xl font-black text-white leading-tight">Sublimación en Alto Formato</h3>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Escalado y montaje técnico para piezas de gran escala, patrones deportivos completos y lienzos masivos. Manejo preciso de sangrías, márgenes de costura y panelado técnico.</p>
+                        </div>
+                        <div class="bg-gray-950/60 p-3 rounded-lg border border-gray-800 flex items-center gap-3 relative z-10">
+                            <i class="fa-solid fa-vector-square text-xl text-[#E04A15]"></i>
+                            <p class="text-[10px] text-gray-400">Configuración del negro absoluto y división simétrica de lienzos.</p>
+                        </div>
+                    </div>
+
+                    <!-- Diapositiva 5 -->
+                    <div class="slide-item w-full opacity-0 transition-all duration-500 transform translate-x-8 absolute inset-0 p-6 pointer-events-none flex flex-col justify-between rounded-2xl overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1509281373149-e957c6296406?auto=format&fit=crop&q=80&w=800" alt="Mockups" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none z-0">
+                        <div class="space-y-2 relative z-10">
+                            <span class="inline-block bg-orange-500/10 text-orange-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-orange-500/20">Día 2 - Tarde</span>
+                            <h3 class="text-base sm:text-xl font-black text-white leading-tight">Mockups Premium y Cierre Comercial</h3>
+                            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Presenta tus proyectos con el mayor impacto visual posible. Aprende a montar tus diseños finales sobre plantillas hiperrealistas en Photoshop para la aprobación inmediata del cliente.</p>
+                        </div>
+                        <div class="bg-gray-950/60 p-3 rounded-lg border border-gray-800 flex items-center gap-3 relative z-10">
+                            <i class="fa-solid fa-shirt text-xl text-[#E04A15]"></i>
+                            <p class="text-[10px] text-gray-400">Entrega de recursos pre-configurados y flujos automatizados.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-gray-900">
+                    <button onclick="slideAnterior()" class="bg-gray-950 active:bg-gray-800 hover:bg-gray-900/60 text-gray-300 w-11 h-10 rounded-xl flex items-center justify-center border border-gray-800/80 cursor-pointer">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span id="slideCounterGlobal" class="text-xs font-mono text-gray-400 bg-black/80 px-4 py-2 rounded-xl border border-gray-900">1 / 5</span>
+                    <button onclick="slideSiguiente()" class="bg-gray-950 active:bg-gray-800 hover:bg-gray-900/60 text-gray-300 w-11 h-10 rounded-xl flex items-center justify-center border border-gray-800/80 cursor-pointer">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <button onclick="cambiarSesion('registro')" class="w-full bg-[#E04A15] hover:bg-orange-700 active:scale-98 text-white font-black py-4 rounded-xl shadow-lg shadow-orange-950/20 text-xs uppercase tracking-wider transition-all cursor-pointer">
+                    <i class="fa-solid fa-ticket mr-1"></i> Ir a Detalles de Pago e Inscripción
+                </button>
+            </div>
+
+            <!-- SESIÓN 2: REGISTRO Y MÉTODOS DE PAGO -->
+            <div id="sesion-registro" class="hidden p-4 sm:p-6 md:p-8 space-y-6">
+                <div class="bg-gray-950/60 border border-gray-900 rounded-xl p-4 space-y-3">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-900 pb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-orange-500"></i> Métodos de Pago y Acceso Autorizados
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="bg-black/60 p-3 rounded-lg border border-gray-900 space-y-2">
+                            <p class="text-[#E04A15] font-black">PAGO MÓVIL (40$)</p>
+                            <div class="flex items-center justify-between bg-black/40 p-1.5 rounded-lg border border-gray-800">
+                                <span class="text-gray-400 font-mono">BDV (0102)</span>
+                                <button type="button" onclick="copiarTexto('0102', this)" class="text-gray-500 hover:text-orange-500 transition px-1"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="flex items-center justify-between bg-black/40 p-1.5 rounded-lg border border-gray-800">
+                                <span class="text-gray-400 font-mono">V-28.140.126</span>
+                                <button type="button" onclick="copiarTexto('28140126', this)" class="text-gray-500 hover:text-orange-500 transition px-1"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="flex items-center justify-between bg-black/40 p-1.5 rounded-lg border border-gray-800">
+                                <span class="text-gray-400 font-mono">0422-1110236</span>
+                                <button type="button" onclick="copiarTexto('04221110236', this)" class="text-gray-500 hover:text-orange-500 transition px-1"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div class="bg-black/60 p-3 rounded-lg border border-emerald-950/40 space-y-2 flex flex-col justify-between">
+                            <div>
+                                <p class="text-emerald-400 font-black">BINANCE PAY (37$ USDT)</p>
+                                <p class="text-[10px] text-gray-500 uppercase font-bold mt-1">Correo Cuenta:</p>
+                            </div>
+                            <div class="flex items-center justify-between bg-black/40 p-1.5 rounded-lg border border-gray-800">
+                                <span class="text-gray-400 font-mono text-[10px] truncate select-all">igarzacarlos147@gmail.com</span>
+                                <button type="button" onclick="copiarTexto('igarzacarlos147@gmail.com', this)" class="text-gray-500 hover:text-emerald-400 transition px-1"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RECUADRO CON LA CLAVE DE ACCESO EXPOSITIVA -->
+                    <div class="bg-orange-600/10 border border-orange-500/20 p-3 rounded-lg space-y-1">
+                        <p class="text-[9px] font-bold text-orange-400 uppercase tracking-wider"><i class="fa-solid fa-key mr-1"></i> Clave de Acceso a la Plataforma del Curso</p>
+                        <div class="flex items-center justify-between bg-black/40 px-2.5 py-1.5 rounded-md border border-gray-800">
+                            <span class="text-white font-mono font-bold text-xs tracking-wider">KROMA-2026-TXT</span>
+                            <button type="button" onclick="copiarTexto('KROMA-2026-TXT', this)" class="text-gray-400 hover:text-orange-400 transition text-xs"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario Compacto -->
+                <form id="registroForm" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre Completo</label>
+                            <input type="text" name="Nombre" required class="w-full bg-black border border-gray-900 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E04A15]">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Edad</label>
+                            <input type="number" name="Edad" min="1" max="100" required class="w-full bg-black border border-gray-900 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E04A15]">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">WhatsApp</label>
+                            <input type="tel" name="WhatsApp" placeholder="+58 412 0000000" required class="w-full bg-black border border-gray-900 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E04A15]">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Correo Electrónico</label>
+                            <input type="email" name="Correo" placeholder="correo@ejemplo.com" required class="w-full bg-black border border-gray-900 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E04A15]">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Experiencia</label>
+                            <select name="Experiencia" required class="w-full bg-black border border-gray-900 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#E04A15] appearance-none">
+                                <option value="" disabled selected>Selecciona tu nivel</option>
+                                <option value="Principiante">Principiante (Taller / Empezar)</option>
+                                <option value="Intermedio">Intermedio (Ya diseño pero busco mejorar)</option>
+                                <option value="Avanzado">Avanzado (Profesional / Operador)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Método de Pago</label>
+                            <select name="Metodo_Pago" required class="w-full bg-black border border-gray-900 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#E04A15] appearance-none">
+                                <option value="" disabled selected>Método utilizado</option>
+                                <option value="Pago Móvil (40$)">Pago Móvil (40$)</option>
+                                <option value="Transferencia (40$)">Transferencia (40$)</option>
+                                <option value="Binance USDT (37$)">Binance (37$ USDT)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Número de Referencia</label>
+                            <input type="text" name="Referencia" placeholder="Ej: 987654" required class="w-full bg-black border border-gray-900 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E04A15]">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Foto del Comprobante</label>
+                            <input type="file" name="Capture_Pago" accept="image/*" required class="w-full bg-black border border-gray-900 rounded-xl px-3 py-1.5 text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-gray-900 file:text-gray-300">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-[#E04A15] hover:bg-orange-700 active:scale-98 text-white font-black py-4 rounded-xl shadow-lg text-xs uppercase tracking-wider transition-all cursor-pointer">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Enviar Registro de Pago
+                    </button>
+                </form>
+                
+                <!-- ESPACIO DE RESPUESTA EN WHATSAPP DESPUÉS DEL REGISTRO -->
+                <div id="contenedor-wa" class="hidden max-w-xs mx-auto pt-2">
+                    <a id="waEsperaBtn" href="#" target="_blank" class="flex items-center justify-center space-x-2 bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider transition w-full shadow-lg">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>Notificar Registro por WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- SESIÓN 3: COMPROBANTE DE INSCRIPCIÓN (PENDIENTE / APROBADO) -->
+            <div id="sesion-comprobante" class="hidden p-4 sm:p-6 md:p-8 space-y-6">
+                
+                <!-- ESTADO 1: BLOQUEADO (NO REGISTRADO) -->
+                <div id="comp-bloqueado" class="text-center py-10 space-y-4">
+                    <div class="w-16 h-16 bg-gray-900/60 border border-gray-800 text-gray-600 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-base font-black text-gray-400 uppercase">Comprobante no disponible</h3>
+                        <p class="text-gray-600 text-xs max-w-xs mx-auto">Primero debes completar tu registro de pago en la pestaña de **Inscripción**.</p>
+                    </div>
+                    <button onclick="cambiarSesion('registro')" class="bg-gray-900 hover:bg-gray-800 text-gray-300 font-bold px-5 py-2.5 rounded-xl text-[10px] uppercase tracking-wider border border-gray-800 transition cursor-pointer">
+                        Ir a Inscripción
+                    </button>
+                </div>
+
+                <!-- ESTADO 2: PENDIENTE DE APROBACIÓN (REGISTRADO PERO SIN VALIDACIÓN ADMIN) -->
+                <div id="comp-pendiente" class="hidden text-center py-8 space-y-6">
+                    <div class="w-16 h-16 bg-orange-600/10 border border-orange-500/20 text-[#E04A15] rounded-full flex items-center justify-center text-3xl mx-auto animate-pulse">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-lg font-black text-white uppercase">Validación en Proceso</h3>
+                        <p class="text-gray-400 text-xs max-w-sm mx-auto leading-relaxed">
+                            Hemos recibido tu comprobante de pago. Tu referencia está siendo revisada por nuestro equipo administrativo para certificar la acreditación de los fondos.
+                        </p>
+                    </div>
+                    <div class="bg-gray-950/40 p-4 rounded-xl border border-gray-900 max-w-sm mx-auto text-left text-xs text-gray-500 space-y-1.5">
+                        <p class="font-bold text-orange-400 text-[10px] uppercase tracking-wider">Detalles de espera:</p>
+                        <p>• Una vez que el facilitador apruebe tu referencia, se habilitará esta sesión para que imprimas tu comprobante oficial.</p>
+                    </div>
+                </div>
+
+                <!-- ESTADO 3: APROBADO (COMPROBANTE DISPONIBLE PARA IMPRESIÓN) -->
+                <div id="comp-aprobado" class="hidden space-y-6">
+                    <div class="bg-emerald-600/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3">
+                        <i class="fa-solid fa-circle-check text-xl text-emerald-400 shrink-0"></i>
+                        <div>
+                            <p class="text-white font-bold text-xs uppercase">Referencia Aprobada por Carlos Igarza</p>
+                            <p class="text-gray-400 text-[10px]">Tu comprobante de acceso ya se encuentra listo para descargar o imprimir.</p>
+                        </div>
+                    </div>
+
+                    <!-- TARJETA DEL COMPROBANTE DIGITAL -->
+                    <div id="printReceiptArea" class="comprobante-card bg-stone-900/40 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl relative text-left">
+                        <!-- Cabecera de Comprobante -->
+                        <div class="flex justify-between items-start border-b border-gray-800/80 pb-4">
+                            <div>
+                                <h3 class="text-lg font-black text-white tracking-tight uppercase">KROMA WORKSHOP</h3>
+                                <p class="text-[9px] text-orange-500 font-mono font-bold uppercase tracking-wider">Comprobante de Inscripción Oficial</p>
+                            </div>
+                            <div class="text-right">
+                                <p id="recMatricula" class="text-white font-mono font-black text-sm uppercase">-</p>
+                                <p class="text-[8px] text-gray-500 uppercase">MATRÍCULA ALUMNO</p>
+                            </div>
+                        </div>
+
+                        <!-- Grilla de Información del Estudiante -->
+                        <div class="grid grid-cols-2 gap-y-4 gap-x-2 text-xs">
+                            <div>
+                                <p class="text-[8px] text-gray-500 uppercase font-bold">Estudiante</p>
+                                <p id="recNombre" class="text-gray-200 font-bold uppercase">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[8px] text-gray-500 uppercase font-bold">Edad</p>
+                                <p id="recEdad" class="text-gray-200 font-bold font-mono">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[8px] text-gray-500 uppercase font-bold">Contacto / Correo</p>
+                                <p id="recContacto" class="text-gray-200 truncate">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[8px] text-gray-500 uppercase font-bold">Método de Pago</p>
+                                <p id="recMetodo" class="text-gray-200 font-semibold">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[8px] text-gray-500 uppercase font-bold">Referencia Operación</p>
+                                <p id="recReferencia" class="text-emerald-400 font-mono font-bold">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[8px] text-gray-500 uppercase font-bold">Fecha de Aprobación</p>
+                                <p id="recFecha" class="text-gray-200 font-mono font-bold">-</p>
+                            </div>
+                        </div>
+
+                        <!-- Línea decorativa del Código de Barras / QR Simulada -->
+                        <div class="border-t border-gray-800/80 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <div class="text-left space-y-1">
+                                <p class="text-[9px] text-gray-400 leading-normal"><i class="fa-solid fa-qrcode text-orange-500 mr-1"></i> <strong>Firma Digital KROMA</strong></p>
+                                <p class="text-[8px] text-gray-500 max-w-xs">Este documento certifica tu cupo activo en las 2 jornadas intensivas de capacitación textil en Guayana.</p>
+                            </div>
+                            <div class="bg-white p-1 rounded-lg">
+                                <img id="recQR" src="" alt="Firma Electrónica QR" class="w-16 h-16">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón para Imprimir -->
+                    <button onclick="imprimirComprobanteEstudiante()" class="w-full bg-gray-900 active:bg-gray-800 text-gray-300 font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider border border-gray-800 transition shadow-lg cursor-pointer flex items-center justify-center gap-2 no-print">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Imprimir Comprobante (Guardar PDF)</span>
+                    </button>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- ==========================================
+             5. PANEL ADMINISTRATIVO SECRETO PARA CARLOS
+        =========================================== -->
+        <footer class="no-print pt-4 border-t border-gray-950">
+            <div class="bg-gray-950/60 p-4 rounded-2xl border border-gray-900 max-w-sm mx-auto space-y-3">
+                <button onclick="toggleAdminPanel()" class="w-full text-center text-gray-500 hover:text-[#E04A15] text-[10px] font-mono tracking-widest uppercase transition cursor-pointer py-1.5 block">
+                    <i class="fa-solid fa-lock text-[9px] mr-1"></i> Panel de Validación Interna
+                </button>
+                
+                <div id="formAdmin" class="hidden space-y-3.5 pt-2 border-t border-gray-900">
+                    <div class="space-y-1">
+                        <p class="text-[10px] text-gray-400 italic leading-snug">Ingresa tu clave de administrador para aprobar la referencia cargada y liberar el comprobante.</p>
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="adminClave" placeholder="Introduce tu clave secreta" oninput="comprobarClaveAdmin()" class="w-full bg-black border border-gray-900 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none">
+                    </div>
+                    
+                    <!-- Tarjeta con la referencia pendiente cargada -->
+                    <div id="referenciaPendienteBox" class="hidden bg-black/60 p-3 rounded-lg border border-gray-900 space-y-2 text-xs">
+                        <p class="text-[9px] text-orange-400 font-bold uppercase tracking-wider">Referencia Pendiente:</p>
+                        <div class="text-gray-400 space-y-1 text-[11px] text-left">
+                            <p>Alumno: <span id="admNombre" class="text-white font-bold">-</span></p>
+                            <p>Método: <span id="admMetodo" class="text-white">-</span></p>
+                            <p>Referencia: <span id="admRef" class="text-emerald-400 font-mono font-bold">-</span></p>
+                        </div>
+                        <button type="button" onclick="procesarAprobacionAdministrativa()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-2 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer">
+                            <i class="fa-solid fa-check-double mr-1"></i> Aprobar Referencia
+                        </button>
+                    </div>
+
+                    <!-- Mensaje si no hay solicitudes pendientes -->
+                    <div id="noPendientesBox" class="text-center py-2 text-gray-600 text-xs uppercase tracking-widest">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Sin solicitudes pendientes
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- ==========================================
+         6. JAVASCRIPT: LÓGICA DE NEGOCIO, SLIDERS Y MÓDULOS DE APROBACIÓN
+    =========================================== -->
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide-item');
+        const slideCounter = document.getElementById('slideCounterGlobal');
+
+        // Estado del registro actual en memoria
+        let registroActivo = null;
+        let pagoAprobado = false;
+
+        function cambiarSesion(sesionId) {
+            document.getElementById('sesion-temario').classList.add('hidden');
+            document.getElementById('sesion-registro').classList.add('hidden');
+            document.getElementById('sesion-comprobante').classList.add('hidden');
+
+            const tabs = ['temario', 'registro', 'comprobante'];
+            tabs.forEach(tab => {
+                const btn = document.getElementById(`tab-${tab}`);
+                if (btn) {
+                    btn.className = "session-tab flex-1 py-3 text-center rounded-xl flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer text-stone-400 hover:text-white hover:bg-stone-900/60 font-medium text-xs md:text-sm";
+                }
+            });
+
+            document.getElementById(`sesion-${sesionId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${sesionId}`);
+            if (activeBtn) {
+                activeBtn.className = "session-tab flex-1 py-3 text-center rounded-xl flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer bg-orange-600 text-white font-bold text-xs md:text-sm shadow-lg";
+            }
+        }
+
+        function actualizarCarrusel() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.remove('opacity-0', 'translate-x-8', 'pointer-events-none');
+                    slide.classList.add('opacity-100', 'translate-x-0');
+                } else {
+                    slide.classList.remove('opacity-100', 'translate-x-0');
+                    slide.classList.add('opacity-0', 'translate-x-8', 'pointer-events-none');
+                }
+            });
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        function slideSiguiente() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            actualizarCarrusel();
+        }
+
+        function slideAnterior() {
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            actualizarCarrusel();
+        }
+
+        function mostrarToast(mensaje, esExito = true) {
+            const toast = document.getElementById('toastNotification');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            icon.innerHTML = esExito ? '<i class="fa-solid fa-circle-check text-emerald-500"></i>' : '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
+            msg.textContent = mensaje;
+
+            toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+            }, 3500);
+        }
+
+        function copiarTexto(texto, elemento) {
+            // Clipboard fallback para iFrames
+            const inputAux = document.createElement("input");
+            inputAux.setAttribute("value", texto);
+            document.body.appendChild(inputAux);
+            inputAux.select();
+            document.execCommand("copy");
+            document.body.removeChild(inputAux);
+
+            mostrarToast("Copiado al portapapeles correctamente");
+            const iconoOriginal = elemento.innerHTML;
+            elemento.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i>';
+            setTimeout(() => { elemento.innerHTML = iconoOriginal; }, 1500);
+        }
+
+        function toggleAdminPanel() {
+            const formAdmin = document.getElementById('formAdmin');
+            formAdmin.classList.toggle('hidden');
+        }
+
+        // CONTROL DE REGISTRO DE FORMULARIO
+        document.getElementById('registroForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const matriculaGenerada = "KRM-" + Math.floor(1000 + Math.random() * 9000);
+
+            registroActivo = {
+                nombre: formData.get('Nombre'),
+                edad: formData.get('Edad'),
+                whatsapp: formData.get('WhatsApp'),
+                correo: formData.get('Correo'),
+                experiencia: formData.get('Experiencia'),
+                metodo: formData.get('Metodo_Pago'),
+                referencia: formData.get('Referencia'),
+                matricula: matriculaGenerada,
+                fecha: new Date().toLocaleDateString('es-ES')
+            };
+
+            // Creamos un mensaje dinámico incluyendo todos los datos solicitados
+            const mensajeWA = encodeURIComponent(`¡Hola Carlos! Acabo de registrar mi pago para el Taller Textil KROMA.\n\n*Datos de Registro:*\n• Nombre: ${registroActivo.nombre}\n• Edad: ${registroActivo.edad} años\n• Correo: ${registroActivo.correo}\n• WhatsApp: ${registroActivo.whatsapp}\n• Método de Pago: ${registroActivo.metodo}\n• Referencia: ${registroActivo.referencia}\n• Matrícula: ${registroActivo.matricula}\n\nAdjunto el comprobante de la operación.`);
+            document.getElementById('waEsperaBtn').href = `https://wa.me/584221110236?text=${mensajeWA}`;
+            
+            document.getElementById('contenedor-wa').classList.remove('hidden');
+            
+            // Actualizar vista del Comprobante (Fase Espera)
+            document.getElementById('comp-bloqueado').classList.add('hidden');
+            document.getElementById('comp-pendiente').classList.remove('hidden');
+            document.getElementById('comp-aprobado').classList.add('hidden');
+
+            // Actualizar Panel Admin Interno con la nueva solicitud pendiente
+            document.getElementById('admNombre').textContent = registroActivo.nombre;
+            document.getElementById('admMetodo').textContent = registroActivo.metodo;
+            document.getElementById('admRef').textContent = registroActivo.referencia;
+            document.getElementById('noPendientesBox').classList.add('hidden');
+            document.getElementById('referenciaPendienteBox').classList.remove('hidden');
+
+            mostrarToast("¡Registro procesado! Redirigiendo a verificación.");
+            cambiarSesion('comprobante');
+        });
+
+        // COMPROBACIÓN DE CONTRASEÑA EN TIEMPO REAL
+        function comprobarClaveAdmin() {
+            const clave = document.getElementById('adminClave').value;
+            // Si la clave es correcta y hay una solicitud pendiente, mostrar el box
+            if (clave === "kroma2026") {
+                if (registroActivo && !pagoAprobado) {
+                    document.getElementById('referenciaPendienteBox').classList.remove('hidden');
+                    document.getElementById('noPendientesBox').classList.add('hidden');
+                } else {
+                    document.getElementById('noPendientesBox').classList.remove('hidden');
+                    document.getElementById('referenciaPendienteBox').classList.add('hidden');
+                    document.getElementById('noPendientesBox').textContent = "Conectado. Sin referencias por aprobar.";
+                }
+            } else {
+                document.getElementById('referenciaPendienteBox').classList.add('hidden');
+                if (clave.length > 0) {
+                    document.getElementById('noPendientesBox').classList.remove('hidden');
+                    document.getElementById('noPendientesBox').innerHTML = '<span class="text-rose-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Clave incorrecta</span>';
+                }
+            }
+        }
+
+        // PROCESAR LA APROBACIÓN POR CARLOS
+        function procesarAprobacionAdministrativa() {
+            const clave = document.getElementById('adminClave').value;
+            if (clave !== "kroma2026") {
+                mostrarToast("La clave secreta ingresada es incorrecta", false);
+                return;
+            }
+
+            pagoAprobado = true;
+
+            // Llenar datos de la tarjeta digital de Comprobante
+            document.getElementById('recMatricula').textContent = registroActivo.matricula;
+            document.getElementById('recNombre').textContent = registroActivo.nombre;
+            document.getElementById('recEdad').textContent = registroActivo.edad + " Años";
+            document.getElementById('recContacto').textContent = registroActivo.correo;
+            document.getElementById('recMetodo').textContent = registroActivo.metodo;
+            document.getElementById('recReferencia').textContent = registroActivo.referencia;
+            document.getElementById('recFecha').textContent = registroActivo.fecha;
+
+            // Generar código QR oficial usando la API QuickChart
+            const qrPayload = encodeURIComponent(`KROMA_TICKET:${registroActivo.matricula}|ALUMNO:${registroActivo.nombre}|REF:${registroActivo.referencia}`);
+            document.getElementById('recQR').src = `https://quickchart.io/qr?text=${qrPayload}&size=150&margin=1`;
+
+            // Actualizar visualización del Comprobante a "Aprobado"
+            document.getElementById('comp-pendiente').classList.add('hidden');
+            document.getElementById('comp-aprobado').classList.remove('hidden');
+            document.getElementById('badgeAprobado').classList.remove('hidden');
+
+            // Actualizar el Panel Admin
+            document.getElementById('referenciaPendienteBox').classList.add('hidden');
+            document.getElementById('noPendientesBox').classList.remove('hidden');
+            document.getElementById('noPendientesBox').innerHTML = '<span class="text-emerald-500 font-bold"><i class="fa-solid fa-circle-check"></i> Pago Aprobado Exitosamente</span>';
+
+            mostrarToast("¡Referencia validada! Pase habilitado en pantalla.");
+
+            // Añadir de forma silenciosa el registro a la planilla de asistencia de impresión
+            const tbody = document.getElementById('printAttendanceRows');
+            const totalFilas = tbody.children.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="border border-black p-2 text-center font-mono">${totalFilas}</td>
+                <td class="border border-black p-2 font-mono font-bold">${registroActivo.matricula}</td>
+                <td class="border border-black p-2 uppercase">${registroActivo.nombre}</td>
+                <td class="border border-black p-2 text-center">${registroActivo.edad}</td>
+                <td class="border border-black p-2 font-mono">${registroActivo.whatsapp}</td>
+                <td class="border border-black p-2 font-mono text-gray-600">${registroActivo.referencia}</td>
+                <td class="border border-black p-2 text-center text-stone-300 font-light">_________________</td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // IMPRIMIR COMPROBANTE INDIVIDUAL DEL ESTUDIANTE
+        function imprimirComprobanteEstudiante() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
